@@ -2,7 +2,6 @@
 
 This repository supports finetuning SAM3 models on custom datasets in multi-node setup or local execution. The training script is located at `sam3/train.py` and uses Hydra configuration management to handle complex training setups.
 
-
 ## Installation
 
 ```bash

@@ -4,6 +4,16 @@ This document describes the complete procedure for performing **video augmentati
 
 ---
 
+## Environment Setup
+
+Run the following command to install the required packages
+
+'''bash
+pip install openai pyarrow
+'''
+
+---
+
 ## Dataset Structure
 
 The LeRobot dataset contains four metadata files:

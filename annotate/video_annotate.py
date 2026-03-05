@@ -12,6 +12,7 @@ from PIL import Image
 from sam3.model_builder import build_sam3_video_predictor
 from coco_io import save_outputs_merged_to_coco_json
 
+
 OBJ = {
     "hand":   {"id": 0, "prompt": "white-and-black robotic hand", "color_bgr": (255, 0, 0)},
     "bottle": {"id": 1, "prompt": "bottle",                      "color_bgr": (0, 255, 0)},
@@ -131,8 +132,6 @@ PROFILES: Dict[str, ProfileSpec] = dict([
     # scenario 3
 ])
 
-
-
 def add_args_for_profile(p: argparse.ArgumentParser, spec: ProfileSpec) -> None:
     # 这两个是“最终值”（自动生成），但仍允许命令行覆盖
     p.add_argument("--video_path", type=str, default=spec.video_path)
@@ -159,76 +158,6 @@ def build_parser() -> argparse.ArgumentParser:
 
     return parser
 
-'''
-def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "--video_path",
-        type=str,
-        # required=True,
-        # default = "/home/grail/training_data/real_data/scenario_4/2025.12.20/videos/chunk-000/observation.images.cam2/episode_000003.mp4",
-        default = "/home/grail/training_data/real_data/scenario_1/videos/chunk-000/observation.images.cam3/episode_000099.mp4",
-        help="Path to input video file"
-    )
-    parser.add_argument(
-        "--out_dir",
-        type = str,
-        # required = True,
-        # default= "/home/grail/training_data/real_data/scenario_1_cam_3_marked_test/",
-        default = "/home/grail/training_data/real_data/scenario_1_cam_3_no_hand/",
-        help = "Path to output video file"
-    )
-    parser.add_argument(
-        "--object1_prompt",
-        type = str,
-        # required = True,
-        default= "bottle",
-        help = "Prompt of object1, e.g. bottle (cam2, cam3) / black or orange bottle (cam3) (scenario 1), (scenario 2)"
-    )
-    parser.add_argument(
-        "--object2_prompt",
-        type = str,
-        # required = True,
-        default= "blue or grey circle",
-        help = "Prompt of object2, e.g. blue or grey circle (scenario 1), grey rectangular tray (scenario 2)"
-    )
-    parser.add_argument(
-        "--object3_prompt",
-        type = str,
-        # default="white-and-black robotic hand",
-        default ="robotic hand with thumb",
-        help = "Prompt of object3, e.g. white-and-black robotic hand (cam2), robotic hand with thumb (cam3)"
-    )
-    parser.add_argument(
-        "--frame_idx_obj1",
-        type = int,
-        # default=60,
-        default = 210,
-        help="Frame index used to initialize bottle prompt (default: 0)"
-    )
-    parser.add_argument(
-        "--frame_idx_obj2",
-        type = int,
-        default=0,
-        help="Frame index used to initialize obj2 prompt (default: 0)"
-    )
-    parser.add_argument(
-        "--frame_idx_obj3",
-        type = int,
-        default=0,
-        help="Frame index used to initialize hand prompt (default: 0)"
-    )
-    parser.add_argument(
-        "--c2",
-        type = int,
-        nargs = 3,
-        # required = True,
-        default = (0, 0, 255),
-        metavar = ("B","G","R"),
-        help = "Color of object2, e.g. (0,0,255) for coaster, (255,255,0) for box"
-    )
-    return parser
-'''
 class VideoPromptRunner:
     KEYS = ["out_obj_ids", "out_boxes_xywh", "out_binary_masks"]
 
