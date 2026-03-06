@@ -76,10 +76,11 @@ def save_outputs_merged_to_coco_json(
             break
 
     if H is None or W is None:
-        raise ValueError(
-            "Cannot infer H,W because all frames have 0 masks. "
-            "If you still want to save, hardcode H,W and modify this function."
-        )
+        # raise ValueError(
+        #     "Cannot infer H,W because all frames have 0 masks. "
+        #     "If you still want to save, hardcode H,W and modify this function."
+        # )
+        H, W = 360, 640
 
     # --------------------------------------------------------
     # Part 2.2) Build the minimal COCO skeleton

@@ -15,59 +15,29 @@ All the code is in the **./annotate** folder.
 ## 1. Recommended Workflow
 
 * Annotate **one** video for experiment:
-Set episode you want to experiment with in PROFILES first.
+Set episode you want to experiment with in PROFILES in profile.py first.
 
 ```bash
-python ./annotate/video_annotate.py s1c2
+python -m annotate.video_annotate.py s1c2
 ```
 
 * Render **one** video for experiment:
-This is based on the result(s) of video_annotate.py. Make sure you've completed the first step.
-The default render tag is "render"
+This is based on the result of video_annotate.py. The following command automatically uses the *coco.json file generated above.
 
 ```bash
-python ./annotate/video_read_coco.py s1c2
-python ./annotate/video_read_coco.py s1c2 --render_tag no_hand
+python -m annotate.video_read_coco.py s1c2
 ```
 
 * Iteratively annotate/render all videos
-For a certain data set in PROFILE (e.g. s1c2), modify PY_SCRIPT as video_annotate.py first, and run the following command.
+Set a certain data set (e.g. s1c2) run the following command.
 
 ```bash
 ./run_all_video.sh
 ```
 
-Modify **PY_SCRIPT** as video_read_coco.py, and re-run the above command to render the video with custom requirements.
+## 2. Config Setting
 
-## 2. Basic Introduction
-
-The workflow is divided into three files:
-
-### 2.1 `video_annotate.py`
-
-* Runs SAM3 on a selected scenario/camera profile
-* Extracts masks per object
-* Saves results as COCO JSON
-* renders annotated video with all masks (for verification)
-
-### 2.2 `video_read_coco.py`
-
-* Reads existing COCO JSON
-* Selectively renders chosen objects
-* Outputs rendered video to a custom folder
-
-### 2.3 `coco_io.py`
-
-* Converts `outputs_merged` (frame-indexed masks, boxes, object IDs) into a minimal COCO JSON file
-* Encodes masks as RLE and converts normalized boxes to COCO pixel format
-* Preserves tracking IDs via a custom `track_id` field
-* Supports loading COCO JSON back into `outputs_merged` format for re-rendering or post-processing
-
----
-
-## 3. Config Setting
-
-### 3.1 Scenario Camera Profile Setting
+### 2.1 Scenario Camera Profile Setting
 
 Each run is defined by a **profile key**:
 
@@ -94,60 +64,59 @@ Profiles automatically determine:
 
 See the global configuration section at the top of `video_annotate.py` for details.
 
-### 3.2 Object Configuration
+### 2.2 Object Configuration
 
 Objects are centrally defined:
 
 ```python
 OBJ = {
-    "hand":   {"id": 0, "prompt": "...", "color_bgr": (...)},
-    "bottle": {"id": 1, "prompt": "...", "color_bgr": (...)},
-    "pad":    {"id": 2, "prompt": "...", "color_bgr": (...)},
-    "box":    {"id": 3, "prompt": "...", "color_bgr": (...)},
+    "0":   {"name": "hand", "prompt": "...", "color_bgr": (...)},
+    "1": {"name": "bottle", "prompt": "...", "color_bgr": (...)},
+    "..."
 }
 ```
+OBJ_ID is derived from OBJ, a reverse mapping from name to id.
 
-Derived mappings:
+Specifically, prompts can be based on camera or fall back to default:
+```python
+"prompt": "white-and-black robotic hand",  # fallback
+"prompt_by_cam": {
+    2: "white-and-black robotic hand",
+    3: "robotic hand with thumb",
+},
+```
 
-* `OBJ_ID`
-* `OBJ_NAME`
-* `DEFAULT_PROMPT_BY_ID`
-* `DEFAULT_COLOR_BY_ID`
-
-### 3.3 Scenario Object Sets
+### 2.3 Scenario Object Sets
 
 ```python
 SCENARIO_OBJECTS = {
     1: ("hand", "bottle", "pad"),
     2: ("hand", "bottle", "box"),
+    "..."
 }
 ```
 
 Each scenario automatically uses its corresponding object set.
 
----
+### 2.4 Defualt Test Setting
 
-## 4. Parameter Tunning
+ For one experiment with video_annotate.py/video_render.py, we use the default setting in PROFILES in profile.py.
 
-### 4.1 Annotation Parameter Tuning
-
-Change initialization frame for bottle:
-
-```bash
-python ./annotate/video_annotate.py s1c2 --frame_idx_bottle 60
-```
-
-Change object prompt:
-
-```bash
-python ./annotate/video_annotate.py s1c2 --hand_prompt "robotic hand with thumb"
-```
-
-Prompts, the initial frame and color of all objects can be override.
+ ```python
+ PROFILES: Dict[str, ProfileSpec] = {
+    "s1c2": ProfileSpec(
+        scenario=1,
+        cam=2,
+        episode=3,
+        date_dir="2026.02.25",
+    ),
+    "..."
+}
+ ```
 
 ---
 
-### 4.2 Selected Object Rendering
+## 3. Object Render Tuning
 
 When you render the object from the COCO dataset, you can select which object to render (Example: exclude hand).
 
@@ -156,17 +125,5 @@ Inside video_read_coco.py script:
 ```python
 KEEP_NAMES = ("bottle", "pad")
 ```
-
-### 4.3 Batch Processing with Shell Script
-
-For large-scale processing across multiple date directories, a unified shell script is provided.
-
-This script:
-
-* Automatically reads default configuration from `video_annotate.py`
-* Scans all date directories (e.g., `2025.12.08`, `2026.01.05`, etc.)
-* Iterates through all `.mp4` files
-* Runs annotation and rendering per video
-* Preserves date structure in the output directory
 
 ---
