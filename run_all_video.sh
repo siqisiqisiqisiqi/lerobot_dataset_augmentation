@@ -5,13 +5,13 @@ shopt -s nullglob
 ANNOTATE_MODULE="annotate.video_annotate"
 RENDER_MODULE="annotate.video_render"
 
-PROFILE="s2c2"
+PROFILE="s3c3"
 OUT_SUBDIR_BY_DATE=true       # true: 输出按日期分子目录；false: 全部写到同一个 out_dir
 IS_RESUME=false
 ############# START resume control
 # IS_RESUME=true
 # RESUME_DATE="2025.12.02"
-# START_BASENAME="episode_000021.mp4"
+# START_BASENAME="episode_000069.mp4"
 ############ END resume control
 
 

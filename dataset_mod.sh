@@ -10,8 +10,8 @@ TASK_TEXT="Place the bottle into the basket."
 BASE_SRC="/home/grail/training_data/real_data/scenario_2"
 BASE_DEST="/home/grail/training_data/real_data/augment/data/scenario_2_cam2_cam3"
 
-CAM2_BASE="/home/grail/training_data/real_data/scenario_2_cam_2_marked_render"
-CAM3_BASE="/home/grail/training_data/real_data/scenario_2_cam_3_marked_render"
+CAM2_BASE="/home/grail/training_data/real_data/scenario_2_cam_2_render"
+CAM3_BASE="/home/grail/training_data/real_data/scenario_2_cam_3_render"
 
 # Loop through all date folders inside CAM2_BASE
 DATE_DIR=( "$BASE_SRC"/2025.* "$BASE_SRC"/2026.* )

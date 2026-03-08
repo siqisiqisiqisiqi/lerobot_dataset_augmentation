@@ -18,14 +18,14 @@ All the code is in the **./annotate** folder.
 Set episode you want to experiment with in PROFILES in profile.py first.
 
 ```bash
-python -m annotate.video_annotate.py s1c2
+python -m annotate.video_annotate s1c2
 ```
 
 * Render **one** video for experiment:
 This is based on the result of video_annotate.py. The following command automatically uses the *coco.json file generated above.
 
 ```bash
-python -m annotate.video_read_coco.py s1c2
+python -m annotate.video_read_coco s1c2
 ```
 
 * Iteratively annotate/render all videos
@@ -75,9 +75,11 @@ OBJ = {
     "..."
 }
 ```
+
 OBJ_ID is derived from OBJ, a reverse mapping from name to id.
 
 Specifically, prompts can be based on camera or fall back to default:
+
 ```python
 "prompt": "white-and-black robotic hand",  # fallback
 "prompt_by_cam": {
@@ -125,5 +127,7 @@ Inside video_read_coco.py script:
 ```python
 KEEP_NAMES = ("bottle", "pad")
 ```
+
+Note: you can also modify the render style in **./annotate/video_render.py** files, which can influence the VLA performance.
 
 ---

@@ -31,12 +31,23 @@ OBJ = {
         "prompt": "grey rectangular tray",
         "color_bgr": (255, 255, 0),
     },
+    4: {
+        "name": "tissue",
+        "prompt": "tissue in green bag",
+        "prompt_by_cam": {
+            2: "tissue in green bag",
+            3: "tissue in green and yellow bag",
+        },
+        "color_bgr": (0, 255, 0),
+    },
+    
 }
 OBJ_ID = {cfg["name"]: obj_id for obj_id, cfg in OBJ.items()}
 
 SCENARIO_OBJECTS = {
     1: ("hand", "bottle", "pad"),
     2: ("hand", "bottle", "box"),
+    3: ("hand", "tissue", "box"),
 }
 
 VIDEO_CHUNK_SIZE = 2000
@@ -49,8 +60,6 @@ class ProfileSpec:
     date_dir: Optional[str] = None
     chunk: int = 0
 
-    objects: Tuple[str, ...] = ("bottle", "pad", "hand")  # 默认给 scenario1 的集合
-
     prompts: Dict[int, str] = field(default_factory=dict)      # obj_id -> prompt
     init_frame: Dict[int, int] = field(default_factory=dict)   # obj_id -> frame index
     colors_bgr: Dict[int, Tuple[int,int,int]] = field(default_factory=dict)  # overrides
@@ -58,6 +67,10 @@ class ProfileSpec:
     @property
     def key(self) -> str:
         return f"s{self.scenario}c{self.cam}"
+    
+    @property
+    def objects(self) -> Tuple[str, ...]:
+        return SCENARIO_OBJECTS[self.scenario]
     
     def prompt(self, obj_id: int) -> str:
         if obj_id in self.prompts:
@@ -76,10 +89,6 @@ def make_profile(*, scenario: int, cam: int, **kwargs) -> Tuple[str, ProfileSpec
         kwargs["objects"] = SCENARIO_OBJECTS[scenario]
     spec = ProfileSpec(scenario=scenario, cam=cam, **kwargs)
     return spec.key, spec
-
-def get_obj_prompt_by_cam(obj_id: int, cam: int) -> str:
-    cfg = OBJ[obj_id]
-    return cfg.get("prompt_by_cam", {}).get(cam, cfg["prompt"])
 
 PROFILES: Dict[str, ProfileSpec] = {
     "s1c2": ProfileSpec(
@@ -105,5 +114,17 @@ PROFILES: Dict[str, ProfileSpec] = {
         cam=3,
         episode=9,
         date_dir="2025.12.02",
+    ),
+    "s3c2": ProfileSpec(
+        scenario=3,
+        cam=2,
+        episode=9,
+        date_dir="2025.12.03",
+    ),
+    "s3c3": ProfileSpec(
+        scenario=3,
+        cam=3,
+        episode=15,
+        date_dir="2025.12.03",
     ),
 }

@@ -66,7 +66,7 @@ def main():
             episode["action_config"] = action_config
         new_items.append(episode)
 
-    # write_jsonl(in_file, new_items)
+    write_jsonl(in_file, new_items)
     print("Done! File modified in-place.")
 
 

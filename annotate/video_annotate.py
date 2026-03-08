@@ -1,14 +1,16 @@
 import os
 import argparse
 from pathlib import Path
-import numpy as np
 from typing import Any
-from PIL import Image
+
 import cv2
+import numpy as np
+from PIL import Image
 
 from sam3.model_builder import build_sam3_video_predictor
 from annotate.config.profile import OBJ_ID, DATA_ROOT, VIDEO_CHUNK_SIZE, PROFILES, ProfileSpec
 from annotate.utils.coco_io import save_outputs_merged_to_coco_json
+
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
@@ -184,8 +186,8 @@ class VideoPromptRunner:
                 objs = []
                 for name in ORDER:
                     obj_id = OBJ_ID[name]
-                    prompt = getattr(self.args, f"{name}_prompt")
-                    frame_index = getattr(self.args, f"frame_idx_{name}")
+                    prompt = self.spec.prompt(obj_id)
+                    frame_index = self.spec.frame(obj_id)
                     if not prompt:   # 可选：允许某个对象不做
                         continue
                     objs.append(dict(
