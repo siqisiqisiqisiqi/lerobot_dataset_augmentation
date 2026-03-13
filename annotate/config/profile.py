@@ -40,7 +40,22 @@ OBJ = {
         },
         "color_bgr": (0, 255, 0),
     },
-    
+    5: {
+        "name": "tissue2",
+        "prompt": "blue object with spots",
+        "color_bgr": (255, 0, 255),
+    },
+    6: {
+        "name": "orange",
+        "prompt": "orange",
+        "color_bgr": (0, 255, 255),
+    },
+    7: {
+        "name": "tissue3",
+        "prompt": "green tissue roll",
+        "color_bgr": (0, 255, 255),
+    },
+
 }
 OBJ_ID = {cfg["name"]: obj_id for obj_id, cfg in OBJ.items()}
 
@@ -48,6 +63,9 @@ SCENARIO_OBJECTS = {
     1: ("hand", "bottle", "pad"),
     2: ("hand", "bottle", "box"),
     3: ("hand", "tissue", "box"),
+    # 3: ("hand", "tissue2", "box"),
+    # 3: ("hand", "orange", "box"),
+    # 3: ("tissue3",), ## 单元素 tuple 一定要带逗号
 }
 
 VIDEO_CHUNK_SIZE = 2000
@@ -84,12 +102,6 @@ class ProfileSpec:
     def color(self, obj_id: int) -> Tuple[int,int,int]:
         return self.colors_bgr.get(obj_id, OBJ[obj_id]["color_bgr"])
 
-def make_profile(*, scenario: int, cam: int, **kwargs) -> Tuple[str, ProfileSpec]:
-    if "objects" not in kwargs:
-        kwargs["objects"] = SCENARIO_OBJECTS[scenario]
-    spec = ProfileSpec(scenario=scenario, cam=cam, **kwargs)
-    return spec.key, spec
-
 PROFILES: Dict[str, ProfileSpec] = {
     "s1c2": ProfileSpec(
         scenario=1,
@@ -118,13 +130,13 @@ PROFILES: Dict[str, ProfileSpec] = {
     "s3c2": ProfileSpec(
         scenario=3,
         cam=2,
-        episode=9,
+        episode=0,
         date_dir="2025.12.03",
     ),
     "s3c3": ProfileSpec(
         scenario=3,
         cam=3,
-        episode=15,
+        episode=14,
         date_dir="2025.12.03",
     ),
 }

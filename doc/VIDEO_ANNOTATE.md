@@ -25,7 +25,13 @@ python -m annotate.video_annotate s1c2
 This is based on the result of video_annotate.py. The following command automatically uses the *coco.json file generated above.
 
 ```bash
-python -m annotate.video_read_coco s1c2
+python -m annotate.video_render s1c2
+```
+
+or run the following commands together
+
+```bash
+python -m annotate.video_annotate s3c3 && python -m annotate.video_render s3c3
 ```
 
 * Iteratively annotate/render all videos

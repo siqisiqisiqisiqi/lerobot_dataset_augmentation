@@ -5,13 +5,18 @@ shopt -s nullglob
 IMAGE_TEXT_DES=true
 
 TEXT_VARIANT_NUM=9
-TASK_TEXT="Place the bottle into the basket."
+TASK_TEXT="Place the object into the basket."
 
-BASE_SRC="/home/grail/training_data/real_data/scenario_2"
-BASE_DEST="/home/grail/training_data/real_data/augment/data/scenario_2_cam2_cam3"
+DATA_ROOT="/home/grail/training_data/real_data"
+############ MODIFY HERE! ########
+SCENARIO=3 
+############ END MODIFY HERE! ####
 
-CAM2_BASE="/home/grail/training_data/real_data/scenario_2_cam_2_render"
-CAM3_BASE="/home/grail/training_data/real_data/scenario_2_cam_3_render"
+BASE_SRC="${DATA_ROOT}/scenario_${SCENARIO}"
+BASE_DEST="${DATA_ROOT}/augment/data/scenario_${SCENARIO}_cam2_cam3"
+
+CAM2_BASE="${DATA_ROOT}/scenario_${SCENARIO}_cam_2_render"
+CAM3_BASE="${DATA_ROOT}/scenario_${SCENARIO}_cam_3_render"
 
 # Loop through all date folders inside CAM2_BASE
 DATE_DIR=( "$BASE_SRC"/2025.* "$BASE_SRC"/2026.* )

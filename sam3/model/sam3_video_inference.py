@@ -1396,6 +1396,17 @@ class Sam3VideoInferenceWithInstanceInteractivity(Sam3VideoInference):
                 box_labels=box_labels,
             )
 
+    def _initialize_empty_cache_for_all_frames(self, inference_state):
+
+        num_frames = inference_state["num_frames"]
+
+        if "cached_frame_outputs" not in inference_state:
+            inference_state["cached_frame_outputs"] = {}
+
+        for f in range(num_frames):
+            if f not in inference_state["cached_frame_outputs"]:
+                inference_state["cached_frame_outputs"][f] = {}
+
     @torch.inference_mode()
     def add_tracker_new_points(
         self,
@@ -1413,6 +1424,15 @@ class Sam3VideoInferenceWithInstanceInteractivity(Sam3VideoInference):
         Every GPU returns the same results, and results should contain all masks including
         these masks not refined or not added by the current user points.
         """
+        # if all(x is None for x in inference_state["previous_stages_out"]):
+        #     logger.info("Single-frame warmup for point-only workflow")
+
+        #     # 只跑当前帧 detection
+        #     self._run_single_frame_inference(inference_state,frame_idx,reverse=False)
+
+        #     # 初始化空 cache
+        #     self._initialize_empty_cache_for_all_frames(inference_state)
+
         assert obj_id is not None, "obj_id must be provided to add new points"
         tracker_metadata = inference_state["tracker_metadata"]
         if tracker_metadata == {}:

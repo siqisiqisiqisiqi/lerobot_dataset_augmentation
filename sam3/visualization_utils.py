@@ -941,3 +941,183 @@ def load_frame(frame):
     else:
         raise ValueError(f"Invalid video frame type: {type(frame)=}")
     return img
+
+
+def visualize_formatted_frame_output_keyboard(
+    frame_idx,
+    video_frames,
+    outputs_list,
+    titles=None,
+    points_list=None,
+    points_labels_list=None,
+    figsize=(12, 8),
+    title_suffix="",
+    prompt_info=None,
+    close_on_key=True,
+):
+    """Visualize segmentation results and wait for a keyboard input like cv2.waitKey(0).
+
+    Returns:
+        key_pressed: str or None
+            The matplotlib key string, e.g. 'q', 'enter', 'escape', 'left', 'right', etc.
+    """
+    # Handle single output dict case
+    if isinstance(outputs_list, dict) and frame_idx in outputs_list:
+        # single outputs dict with frame indices as keys
+        outputs_list = [outputs_list]
+    elif isinstance(outputs_list, dict) and not any(
+        isinstance(k, int) for k in outputs_list.keys()
+    ):
+        # single frame outputs {obj_id: mask}
+        single_frame_outputs = {frame_idx: outputs_list}
+        outputs_list = [single_frame_outputs]
+
+    num_outputs = len(outputs_list)
+    if titles is None:
+        titles = [f"Set {i + 1}" for i in range(num_outputs)]
+    assert len(titles) == num_outputs, (
+        "length of `titles` should match that of `outputs_list` if not None."
+    )
+
+    fig, axes = plt.subplots(1, num_outputs, figsize=figsize)
+    if num_outputs == 1:
+        axes = [axes]
+
+    img = load_frame(video_frames[frame_idx])
+    img_H, img_W, _ = img.shape
+
+    for idx in range(num_outputs):
+        ax, outputs_set, ax_title = axes[idx], outputs_list[idx], titles[idx]
+        ax.set_title(f"Frame {frame_idx} - {ax_title}{title_suffix}")
+        ax.imshow(img)
+
+        if frame_idx in outputs_set:
+            _outputs = outputs_set[frame_idx]
+        else:
+            print(f"Warning: Frame {frame_idx} not found in outputs_set")
+            ax.axis("off")
+            continue
+
+        if prompt_info and frame_idx == 0:
+            if "boxes" in prompt_info:
+                for box in prompt_info["boxes"]:
+                    x, y, w, h = box
+                    plot_bbox(
+                        img_H,
+                        img_W,
+                        [x, y, x + w, y + h],
+                        box_format="XYXY",
+                        relative_coords=True,
+                        color="yellow",
+                        linestyle="dashed",
+                        text="PROMPT BOX",
+                        ax=ax,
+                    )
+
+            if "points" in prompt_info and "point_labels" in prompt_info:
+                points = np.array(prompt_info["points"])
+                labels = np.array(prompt_info["point_labels"])
+                points_pixel = points * np.array([img_W, img_H])
+
+                pos_points = points_pixel[labels == 1]
+                if len(pos_points) > 0:
+                    ax.scatter(
+                        pos_points[:, 0],
+                        pos_points[:, 1],
+                        color="lime",
+                        marker="*",
+                        s=200,
+                        edgecolor="white",
+                        linewidth=2,
+                        label="Positive Points",
+                        zorder=10,
+                    )
+
+                neg_points = points_pixel[labels == 0]
+                if len(neg_points) > 0:
+                    ax.scatter(
+                        neg_points[:, 0],
+                        neg_points[:, 1],
+                        color="red",
+                        marker="*",
+                        s=200,
+                        edgecolor="white",
+                        linewidth=2,
+                        label="Negative Points",
+                        zorder=10,
+                    )
+
+        objects_drawn = 0
+        for obj_id, binary_mask in _outputs.items():
+            mask_sum = (
+                binary_mask.sum()
+                if hasattr(binary_mask, "sum")
+                else np.sum(binary_mask)
+            )
+
+            if mask_sum > 0:
+                if not isinstance(binary_mask, torch.Tensor):
+                    binary_mask = torch.tensor(binary_mask)
+
+                if binary_mask.any():
+                    box_xyxy = masks_to_boxes(binary_mask.unsqueeze(0)).squeeze()
+                    box_xyxy = normalize_bbox(box_xyxy, img_W, img_H)
+                else:
+                    box_xyxy = [0.45, 0.45, 0.55, 0.55]
+
+                color = COLORS[obj_id % len(COLORS)]
+
+                plot_bbox(
+                    img_H,
+                    img_W,
+                    box_xyxy,
+                    text=f"(id={obj_id})",
+                    box_format="XYXY",
+                    color=color,
+                    ax=ax,
+                )
+
+                mask_np = (
+                    binary_mask.cpu().numpy()
+                    if isinstance(binary_mask, torch.Tensor)
+                    else binary_mask
+                )
+                plot_mask(mask_np, color=color, ax=ax)
+                objects_drawn += 1
+
+        if objects_drawn == 0:
+            ax.text(
+                0.5,
+                0.5,
+                "No objects detected",
+                transform=ax.transAxes,
+                fontsize=16,
+                ha="center",
+                va="center",
+                color="red",
+                weight="bold",
+            )
+
+        if points_list is not None and points_list[idx] is not None:
+            show_points(
+                points_list[idx], points_labels_list[idx], ax=ax, marker_size=200
+            )
+
+        ax.axis("off")
+
+    plt.tight_layout()
+
+    # ---- wait for keyboard input like cv2.waitKey(0) ----
+    key_pressed = {"key": None}
+
+    def on_key(event):
+        key_pressed["key"] = event.key
+        if close_on_key:
+            plt.close(fig)
+
+    cid = fig.canvas.mpl_connect("key_press_event", on_key)
+
+    plt.show()   # blocks until window closed
+
+    fig.canvas.mpl_disconnect(cid)
+    return key_pressed["key"]
