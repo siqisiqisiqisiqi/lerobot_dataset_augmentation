@@ -130,7 +130,7 @@ PROFILES: Dict[str, ProfileSpec] = {
     "s3c2": ProfileSpec(
         scenario=3,
         cam=2,
-        episode=0,
+        episode=25,
         date_dir="2025.12.03",
     ),
     "s3c3": ProfileSpec(
