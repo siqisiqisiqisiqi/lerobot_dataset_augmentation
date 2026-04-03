@@ -106,14 +106,14 @@ PROFILES: Dict[str, ProfileSpec] = {
     "s1c2": ProfileSpec(
         scenario=1,
         cam=2,
-        episode=3,
-        date_dir="2026.02.25",
+        episode=4,
+        date_dir="2025.12.01",
     ),
     "s1c3": ProfileSpec(
         scenario=1,
         cam=3,
         episode=9,
-        date_dir="2026.02.25",
+        date_dir="2025.12.01",
     ),
     "s2c2": ProfileSpec(
         scenario=2,
@@ -130,13 +130,13 @@ PROFILES: Dict[str, ProfileSpec] = {
     "s3c2": ProfileSpec(
         scenario=3,
         cam=2,
-        episode=25,
+        episode=20,
         date_dir="2025.12.03",
     ),
     "s3c3": ProfileSpec(
         scenario=3,
         cam=3,
-        episode=14,
+        episode=18,
         date_dir="2025.12.03",
     ),
 }
