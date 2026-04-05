@@ -71,9 +71,11 @@ def abs_to_rel_coords(coords, IMG_WIDTH, IMG_HEIGHT, coord_type="point"):
         raise ValueError(f"Unknown coord_type: {coord_type}")
 
 class VideoPointAnnotator:
-    def __init__(self, video_path, frame_index=0):
+    def __init__(self, video_path, frame_index=0, name=None):
+        self.video_name = Path(video_path).name
         self.video_path = str(video_path)
         self.frame_index = frame_index
+        self.object_name = name
 
         # original frame
         self.image_bgr = None
@@ -123,7 +125,8 @@ class VideoPointAnnotator:
         mode_text = "POSITIVE" if self.mode == 1 else "NEGATIVE"
 
         title_text = (
-            f"Mode: {mode_text}\n"
+            f"Video Name: {self.video_name}\n"
+            f"Object Name: {self.object_name}   |   Mode: {mode_text}\n"
             "Left click: add point | p: positive | n: negative | "
             "u: undo | c: clear | d: done"
         )
@@ -199,7 +202,7 @@ class VideoPointAnnotator:
         return np.array(self.points, dtype=np.int32), np.array(self.labels, dtype=np.int32)
     
 if __name__ == "__main__":
-    video_path = "./episode_000060.mp4"
+    video_path = "/home/grail/training_data/real_data/scenario_3/2025.12.03/videos/chunk-000/observation.images.cam2/episode_000060.mp4"
     frame_index = 20
 
     annotator = VideoPointAnnotator(video_path, frame_index)

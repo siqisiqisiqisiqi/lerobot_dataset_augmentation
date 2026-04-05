@@ -55,6 +55,11 @@ OBJ = {
         "prompt": "green tissue roll",
         "color_bgr": (0, 255, 255),
     },
+    8: {
+        "name": "general_tissue",
+        "prompt": "tissue bag",
+        "color_bgr": (0, 255, 255),
+    },
 
 }
 OBJ_ID = {cfg["name"]: obj_id for obj_id, cfg in OBJ.items()}
@@ -62,7 +67,8 @@ OBJ_ID = {cfg["name"]: obj_id for obj_id, cfg in OBJ.items()}
 SCENARIO_OBJECTS = {
     1: ("hand", "bottle", "pad"),
     2: ("hand", "bottle", "box"),
-    3: ("hand", "tissue", "box"),
+    # 3: ("hand", "tissue", "box"),
+    3: ("tissue", "box"),
     # 3: ("hand", "tissue2", "box"),
     # 3: ("hand", "orange", "box"),
     # 3: ("tissue3",), ## 单元素 tuple 一定要带逗号
@@ -76,6 +82,7 @@ class ProfileSpec:
     cam: int
     episode: int
     date_dir: Optional[str] = None
+    refine_episode: tuple = ()
     chunk: int = 0
 
     prompts: Dict[int, str] = field(default_factory=dict)      # obj_id -> prompt
@@ -130,8 +137,9 @@ PROFILES: Dict[str, ProfileSpec] = {
     "s3c2": ProfileSpec(
         scenario=3,
         cam=2,
-        episode=20,
+        episode=1,
         date_dir="2025.12.03",
+        refine_episode=(45),
     ),
     "s3c3": ProfileSpec(
         scenario=3,
