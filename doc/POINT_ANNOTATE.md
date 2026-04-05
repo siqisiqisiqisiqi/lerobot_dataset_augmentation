@@ -146,23 +146,10 @@ After completing all instances:
 Run the rendering script to visualize the final annotations:
 
 ```bash
-python -m annotate.video_render s3c2
+  python -m annotate.video_render s3c2
 ```
 
 This will generate the **rendered annotated video**.
-
-<!-- --- -->
-
-<!-- ## Keyboard Controls
-
-| Key | Function |
-|----|----|
-| `y` | Accept current mask |
-| `n` | Reject mask / enter refinement |
-| `p` | Positive point mode |
-| `n` | Negative point mode |
-| `d` | Submit point prompts |
-| `r` | Reset mask and redo | -->
 
 ---
 
