@@ -36,28 +36,13 @@ OBJ = {
         "prompt": "tissue in green bag",
         "prompt_by_cam": {
             2: "tissue in green bag",
-            3: "tissue in green and yellow bag",
+            3: "light green bag on the table",
         },
         "color_bgr": (0, 255, 0),
     },
     5: {
-        "name": "tissue2",
-        "prompt": "blue object with spots",
-        "color_bgr": (255, 0, 255),
-    },
-    6: {
         "name": "orange",
         "prompt": "orange",
-        "color_bgr": (0, 255, 255),
-    },
-    7: {
-        "name": "tissue3",
-        "prompt": "green tissue roll",
-        "color_bgr": (0, 255, 255),
-    },
-    8: {
-        "name": "general_tissue",
-        "prompt": "tissue bag",
         "color_bgr": (0, 255, 255),
     },
 
@@ -67,11 +52,12 @@ OBJ_ID = {cfg["name"]: obj_id for obj_id, cfg in OBJ.items()}
 SCENARIO_OBJECTS = {
     1: ("hand", "bottle", "pad"),
     2: ("hand", "bottle", "box"),
-    # 3: ("hand", "tissue", "box"),
-    3: ("tissue", "box"),
+    3: ("hand", "tissue", "box"),
+    # 3: ("tissue", "box"),
     # 3: ("hand", "tissue2", "box"),
     # 3: ("hand", "orange", "box"),
     # 3: ("tissue3",), ## 单元素 tuple 一定要带逗号
+    12: ("bottle",)
 }
 
 VIDEO_CHUNK_SIZE = 2000
@@ -144,7 +130,13 @@ PROFILES: Dict[str, ProfileSpec] = {
     "s3c3": ProfileSpec(
         scenario=3,
         cam=3,
-        episode=18,
-        date_dir="2025.12.03",
+        episode=95,
+        date_dir="2026.04.17",
+    ),
+    "s12c2": ProfileSpec(
+        scenario=12,
+        cam=2,
+        episode=3,
+        date_dir="2026.02.02",
     ),
 }

@@ -8,7 +8,7 @@ import numpy as np
 from PIL import Image
 
 from sam3.model_builder import build_sam3_video_predictor
-from annotate.config.profile import OBJ_ID, DATA_ROOT, VIDEO_CHUNK_SIZE, PROFILES, ProfileSpec
+from annotate.config.profile import OBJ_ID, DATA_ROOT, OBJ, VIDEO_CHUNK_SIZE, PROFILES, ProfileSpec
 from annotate.utils.coco_io import save_outputs_merged_to_coco_json
 
 
@@ -55,6 +55,7 @@ class VideoPromptRunner:
         # we will just propagate from frame 0 to the end of the video
         is_hand = (obj_id == 0)
         outputs_per_frame = {}
+
         if not is_hand:
             for response in self.predictor.handle_stream_request(
                 request=dict(
@@ -269,7 +270,8 @@ def main():
     save_outputs_merged_to_coco_json(
         outputs_merged,
         out_coco_path,
-        video_name=Path(video_path).stem
+        video_name=Path(video_path).stem,
+        category_names_by_id={obj_id: cfg["name"] for obj_id, cfg in OBJ.items()},
     )
 
 if __name__ == "__main__":

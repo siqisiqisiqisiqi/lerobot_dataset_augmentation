@@ -3,7 +3,8 @@ Minimal COCO saver for ONE VIDEO (frame-indexed outputs)
 
 Input:
   outputs_merged: dict[int frame_idx] -> dict with:
-    - out_obj_ids:      (N,) int
+    - out_obj_ids:      (N,) int, class/category ids
+    - out_track_ids:    (N,) int, optional unique instance ids
     - out_boxes_xywh:   (N,4) float, NORMALIZED [cx, cy, w, h] in [0,1]
     - out_binary_masks: (N,H,W) bool
 Optional (ignored):
@@ -15,7 +16,7 @@ Output:
     - annotations: one entry per instance per frame
       segmentation stored as RLE (pycocotools)
       bbox stored as COCO pixel xywh (top-left x,y + w,h)
-      track_id stored as custom field to preserve out_obj_ids
+      track_id stored as custom field to preserve instance ids
 """
 
 import json
@@ -53,14 +54,14 @@ def save_outputs_merged_to_coco_json(
     outputs_merged: dict,
     out_json_path: str,
     video_name: str = "video",
-    category_id: int = 1,
-    category_name: str = "object",
+    category_names_by_id: dict[int, str] | None = None,
 ):
     """
     Minimal COCO export:
       - masks -> RLE
       - boxes -> convert normalized cxcywh to pixel xywh
-      - obj ids -> saved as "track_id" (custom)
+      - obj ids -> saved as "category_id"
+      - track ids -> saved as "track_id" (custom, optional)
     """
 
     # --------------------------------------------------------
@@ -85,10 +86,28 @@ def save_outputs_merged_to_coco_json(
     # --------------------------------------------------------
     # Part 2.2) Build the minimal COCO skeleton
     # --------------------------------------------------------
+    category_ids = set()
+    for fi in frame_idxs:
+        obj_ids = outputs_merged[fi].get("out_obj_ids", None)
+        if isinstance(obj_ids, np.ndarray):
+            category_ids.update(int(obj_id) for obj_id in obj_ids.tolist())
+
+    if not category_ids:
+        category_ids.add(1)
+
+    categories = []
+    for cat_id in sorted(category_ids):
+        if category_names_by_id is None:
+            cat_name = f"object_{cat_id}"
+        else:
+            cat_name = category_names_by_id.get(cat_id, f"object_{cat_id}")
+        categories.append({"id": int(cat_id), "name": str(cat_name)})
+
+    
     coco = {
         "images": [],
         "annotations": [],
-        "categories": [{"id": int(category_id), "name": category_name}],
+        "categories": categories,
     }
 
     # --------------------------------------------------------
@@ -111,6 +130,7 @@ def save_outputs_merged_to_coco_json(
 
         # ---- (b) Read required fields (skip frame if missing) ----
         obj_ids = out.get("out_obj_ids", None)
+        track_ids = out.get("out_track_ids", None)
         boxes   = out.get("out_boxes_xywh", None)
         masks   = out.get("out_binary_masks", None)
 
@@ -121,6 +141,7 @@ def save_outputs_merged_to_coco_json(
 
         # Safety: if obj_ids/boxes are missing or shape mismatch, we still try
         has_ids = isinstance(obj_ids, np.ndarray) and obj_ids.shape[0] == N
+        has_track_ids = isinstance(track_ids, np.ndarray) and track_ids.shape[0] == N
         has_box = isinstance(boxes, np.ndarray) and boxes.shape[0] == N and boxes.shape[1] == 4
 
         for i in range(N):
@@ -144,14 +165,18 @@ def save_outputs_merged_to_coco_json(
             ann = {
                 "id": ann_id,
                 "image_id": image_id,
-                "category_id": int(category_id),
+                "category_id": int(obj_ids[i]) if has_ids else 1,
                 "segmentation": rle,
                 "bbox": bbox,
                 "iscrowd": 0,
 
                 # custom field: preserve your object id (tracking id)
-                "track_id": int(obj_ids[i]) if has_ids else -1,
+                # "track_id": int(obj_ids[i]) if has_ids else -1,
             }
+            if has_track_ids:
+                ann["track_id"] = int(track_ids[i])
+            elif has_ids:
+                ann["track_id"] = int(obj_ids[i])
             coco["annotations"].append(ann)
             ann_id += 1
 
@@ -173,8 +198,7 @@ def save_outputs_merged_to_coco_json(
 #     outputs_merged=outputs_merged,  # <-- must exist in your runtime
 #     out_json_path="/tmp/merged_outs.coco.json",
 #     video_name="episode_000186_cam2",
-#     category_id=1,
-#     category_name="object",
+#     category_names_by_id={0: "hand", 1: "bottle", 2: "pad"},
 # )
 
 
@@ -206,6 +230,7 @@ def load_outputs_merged_from_coco_json(coco_json_path: str):
     Return:
       outputs_merged: dict[int frame_idx] -> {
         'out_obj_ids': (N,) int32
+        'out_track_ids': (N,) int32, only when present in JSON
         'out_boxes_xywh': (N,4) float32, NORMALIZED cxcywh
         'out_binary_masks': (N,H,W) bool
       }
@@ -267,12 +292,16 @@ def load_outputs_merged_from_coco_json(coco_json_path: str):
         anns = anns_by_image.get(image_id, [])
 
         obj_ids = []
+        track_ids = []
         boxes_norm = []
         masks = []
 
         for ann in anns:
-            # ---- (a) track_id -> out_obj_ids ----
-            obj_ids.append(int(ann.get("track_id", -1)))
+            # ---- (a) category_id -> out_obj_ids ----
+            obj_ids.append(int(ann.get("category_id", -1)))
+            if "track_id" in ann:
+                track_ids.append(int(ann["track_id"]))
+
 
             # ---- (b) bbox(pixel xywh) -> normalized cxcywh ----
             bbox_xywh = ann.get("bbox", [0, 0, 0, 0])
@@ -297,6 +326,8 @@ def load_outputs_merged_from_coco_json(coco_json_path: str):
                 "out_boxes_xywh": np.array(boxes_norm, dtype=np.float32),
                 "out_binary_masks": np.stack(masks, axis=0),  # (N,H,W)
             }
+            if len(track_ids) == len(obj_ids):
+                outputs_merged[fi]["out_track_ids"] = np.array(track_ids, dtype=np.int32)
 
     return outputs_merged
 
