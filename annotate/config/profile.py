@@ -32,18 +32,29 @@ OBJ = {
         "color_bgr": (255, 255, 0),
     },
     4: {
-        "name": "tissue",
-        "prompt": "tissue in green bag",
-        "prompt_by_cam": {
-            2: "tissue in green bag",
-            3: "light green bag on the table",
-        },
+        "name": "glass bottle",
+        "prompt": "transparent bottle",
         "color_bgr": (0, 255, 0),
     },
     5: {
-        "name": "orange",
-        "prompt": "orange",
+        "name": "cup",
+        "prompt": "cup",
         "color_bgr": (0, 255, 255),
+    },
+    6: {
+        "name": "blue cup",
+        "prompt": "blue cylinder",
+        "color_bgr": (0, 255, 0),
+    },
+    7: {
+        "name": "red cup",
+        "prompt": "red cylinder",
+        "color_bgr": (255, 0, 0),
+    },
+    8: {
+        "name": "cup holder",
+        "prompt": "black and red holder",
+        "color_bgr": (255, 255, 0),
     },
 
 }
@@ -53,14 +64,20 @@ SCENARIO_OBJECTS = {
     1: ("hand", "bottle", "pad"),
     2: ("hand", "bottle", "box"),
     3: ("hand", "tissue", "box"),
-    # 3: ("tissue", "box"),
-    # 3: ("hand", "tissue2", "box"),
-    # 3: ("hand", "orange", "box"),
-    # 3: ("tissue3",), ## 单元素 tuple 一定要带逗号
-    12: ("bottle",)
+    4: ("cup","glass bottle"),
+    6: ("bottle", "box"),
+    7: ("bottle", "pad", "box"),
+    8: ("bottle", "pad", "box"),
+    9: ("bottle", "pad"),
+    10: ("bottle", "box"),
+    12: ("bottle",),
+    13: ("bottle", "pad"),
+    14: ("bottle", "box"),
+    20: ("blue cup", "cup holder"),
+    21: ("red cup", "cup holder"),
 }
 
-VIDEO_CHUNK_SIZE = 2000
+VIDEO_CHUNK_SIZE = 1000
 
 @dataclass(frozen=True)
 class ProfileSpec:
@@ -130,13 +147,73 @@ PROFILES: Dict[str, ProfileSpec] = {
     "s3c3": ProfileSpec(
         scenario=3,
         cam=3,
-        episode=95,
+        episode=41,
         date_dir="2026.04.17",
+    ),
+    "s4c2": ProfileSpec(
+        scenario=4,
+        cam=2,
+        episode=20,
+        date_dir="2026.01.30",
+    ),
+    "s6c2": ProfileSpec(
+        scenario=6,
+        cam=2,
+        episode=12,
+        date_dir="2026.02.07",
+    ),
+    "s7c2": ProfileSpec(
+        scenario=7,
+        cam=2,
+        episode=12,
+        date_dir="scenario_1",
+    ),
+    "s8c2": ProfileSpec(
+        scenario=8,
+        cam=2,
+        episode=12,
+        date_dir="2026.07.08",
+    ),
+    "s9c2": ProfileSpec(
+        scenario=9,
+        cam=2,
+        episode=12,
+        date_dir="2026.06.08",
+    ),
+    "s10c2": ProfileSpec(
+        scenario=10,
+        cam=2,
+        episode=12,
+        date_dir="2026.07.09",
     ),
     "s12c2": ProfileSpec(
         scenario=12,
         cam=2,
-        episode=3,
+        episode=7,
         date_dir="2026.02.02",
+    ),
+    "s13c2": ProfileSpec(
+        scenario=13,
+        cam=2,
+        episode=7,
+        date_dir="2026.06.23",
+    ),
+    "s14c2": ProfileSpec(
+        scenario=14,
+        cam=2,
+        episode=7,
+        date_dir="2026.06.23",
+    ),
+    "s20c2": ProfileSpec(
+        scenario=20,
+        cam=2,
+        episode=19,
+        date_dir="2026.06.26",
+    ),
+    "s21c2": ProfileSpec(
+        scenario=21,
+        cam=2,
+        episode=19,
+        date_dir="2026.06.26",
     ),
 }

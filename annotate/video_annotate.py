@@ -29,12 +29,67 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 class VideoPromptRunner:
-    KEYS = ["out_obj_ids", "out_boxes_xywh", "out_binary_masks"]
+    KEYS = ["out_obj_ids", "out_track_ids", "out_boxes_xywh", "out_binary_masks"]
 
     def __init__(self, predictor, args, spec: ProfileSpec):
         self.predictor = predictor
         self.args = args
         self.spec = spec
+
+    @staticmethod
+    def summarize_debug_value(value: Any):
+        if isinstance(value, np.ndarray):
+            return {
+                "type": "ndarray",
+                "shape": list(value.shape),
+                "dtype": str(value.dtype),
+            }
+        if isinstance(value, dict):
+            return {k: VideoPromptRunner.summarize_debug_value(v) for k, v in value.items()}
+        if isinstance(value, (list, tuple)):
+            if len(value) <= 4:
+                return [VideoPromptRunner.summarize_debug_value(v) for v in value]
+            return {"type": type(value).__name__, "len": len(value)}
+        return value
+
+    @staticmethod
+    def relabel_output(out: dict[str, Any], obj_id: int, selected_idx: int | None = None):
+        masks = out.get("out_binary_masks", None)
+        if isinstance(masks, np.ndarray) and masks.ndim >= 1:
+            num_masks = masks.shape[0]
+        else:
+            obj_ids = out.get("out_obj_ids", None)
+            num_masks = obj_ids.shape[0] if isinstance(obj_ids, np.ndarray) else 0
+
+        new_out = {}
+        for key, value in out.items():
+            if (
+                selected_idx is not None
+                and isinstance(value, np.ndarray)
+                and value.shape[:1] == (num_masks,)
+            ):
+                new_out[key] = value[selected_idx:selected_idx + 1]
+            else:
+                new_out[key] = value
+
+        original_obj_ids = out.get("out_obj_ids", None)
+        if isinstance(original_obj_ids, np.ndarray):
+            dtype = original_obj_ids.dtype
+            if selected_idx is not None and original_obj_ids.shape[:1] == (num_masks,):
+                track_ids = original_obj_ids[selected_idx:selected_idx + 1]
+            elif original_obj_ids.shape[:1] == (num_masks,):
+                track_ids = original_obj_ids.copy()
+            else:
+                track_ids = None
+        else:
+            dtype = np.int64
+            track_ids = None
+
+        relabeled_count = 1 if selected_idx is not None and num_masks > 0 else num_masks
+        new_out["out_obj_ids"] = np.full((relabeled_count,), obj_id, dtype=dtype)
+        if track_ids is not None:
+            new_out["out_track_ids"] = track_ids
+        return new_out
 
     @staticmethod
     def load_video_frames_for_vis(video_path: str):
@@ -64,8 +119,7 @@ class VideoPromptRunner:
                 )
             ):
                 out = response["outputs"]
-                out['out_obj_ids']=np.array([obj_id],dtype=out['out_obj_ids'].dtype)
-                outputs_per_frame[response["frame_index"]] = out
+                outputs_per_frame[response["frame_index"]] = self.relabel_output(out, obj_id)
 
         else:
             for response in self.predictor.handle_stream_request(
@@ -84,21 +138,31 @@ class VideoPromptRunner:
                     xs = np.where(m)[1]
                     x_max.append(xs.max() if xs.size > 0 else -1)
                 right_hand_idx = int(np.argmax(x_max))
-                new_out = {}
-                N=len(binary_masks)
-                for k,v in out.items():
-                    if isinstance(v,np.ndarray) and v.shape[0]==N:
-                        new_out[k]=v[right_hand_idx:right_hand_idx+1]
-                    else:
-                        new_out[k]=v
-                new_out['out_obj_ids']=np.array([obj_id],dtype=out['out_obj_ids'].dtype)
+                new_out = self.relabel_output(out, obj_id, selected_idx=right_hand_idx)
                 outputs_per_frame[response["frame_index"]] = new_out
+
+        frame_idxs = sorted(outputs_per_frame)
+        if frame_idxs:
+            first_out = outputs_per_frame[frame_idxs[0]]
+            first_masks = first_out.get("out_binary_masks", None)
+            first_mask_shape = (
+                list(first_masks.shape)
+                if isinstance(first_masks, np.ndarray)
+                else None
+            )
+            print(
+                "[DEBUG propagate] "
+                f"obj_id={obj_id} frames={len(frame_idxs)} "
+                f"first_frame={frame_idxs[0]} last_frame={frame_idxs[-1]} "
+                f"first_mask_shape={first_mask_shape}"
+            )
+        else:
+            print(f"[DEBUG propagate] obj_id={obj_id} frames=0")
 
         return outputs_per_frame
 
     def merge_outputs_per_frame(self, outputs_list):
         outputs_merged = {}
-        KEYS = ["out_obj_ids", "out_boxes_xywh", "out_binary_masks"]
         for outputs in outputs_list:
             for frame_idx, out in outputs.items():
                 obj_ids = out.get("out_obj_ids", None)
@@ -109,9 +173,9 @@ class VideoPromptRunner:
                     continue
                 
                 if frame_idx not in outputs_merged:
-                    outputs_merged[frame_idx]={k:out[k] for k in KEYS}
+                    outputs_merged[frame_idx]={k: out[k] for k in self.KEYS if k in out}
                 else:
-                    for k in KEYS:
+                    for k in self.KEYS:
                         if k in out and isinstance(out[k], np.ndarray):
                             outputs_merged[frame_idx][k] = np.concatenate(
                                 [outputs_merged[frame_idx][k],out[k]],
@@ -129,6 +193,12 @@ class VideoPromptRunner:
                 bounding_boxes=bounding_boxes,
                 bounding_box_labels = bounding_box_labels
             )
+        )
+        print(
+            "[DEBUG add_prompt] "
+            f"obj_id={obj_id} frame_index={frame_index} prompt={prompt!r} "
+            f"has_boxes={bounding_boxes is not None} "
+            f"response={self.summarize_debug_value(response)}"
         )
         outputs_per_frame = self.propagate_in_video(session_id, obj_id)
         return outputs_per_frame
@@ -161,6 +231,7 @@ class VideoPromptRunner:
 
         # merge outputs for bottle, coaster and hand
         outputs_merged = self.merge_outputs_per_frame(outputs_list)
+        print(f"[DEBUG merge] merged_frames={len(outputs_merged)}")
 
         _ = self.predictor.handle_request(
             request=dict(
@@ -174,6 +245,7 @@ class VideoPromptRunner:
         outputs_all = {}
         n_frames = len(video_frames_for_vis)
         is_first_chunk = 1
+        print(f"[DEBUG chunks] total_frames={n_frames} chunk_size={chunk_size}")
 
         # 从当前 subcommand/profile 拿到要跑哪些对象
         ORDER = list(self.spec.objects)
@@ -182,6 +254,11 @@ class VideoPromptRunner:
         for start in range(0, n_frames, chunk_size):
             end = min(start + chunk_size, n_frames)
             chunk_frames = video_frames_for_vis[start:end]
+            print(
+                "[DEBUG chunk] "
+                f"start={start} end={end} frames={len(chunk_frames)} "
+                f"objects={ORDER}"
+            )
 
             if is_first_chunk == 1:
                 objs = []
@@ -211,7 +288,7 @@ class VideoPromptRunner:
                 objs = []
                 for name in ORDER:
                     obj_id = OBJ_ID[name]
-                    prompt = getattr(self.args, f"{name}_prompt")
+                    prompt = self.spec.prompt(obj_id)
                     if not prompt:
                         continue
 
@@ -232,6 +309,7 @@ class VideoPromptRunner:
                 global_idx = start + local_idx
                 outputs_all[global_idx] = out  # 把local帧号映射成全局帧号
 
+        print(f"[DEBUG chunks] outputs_all_frames={len(outputs_all)}")
         return outputs_all
 
 def main():
@@ -262,10 +340,13 @@ def main():
 
     runner = VideoPromptRunner(predictor, args, spec)
     video_frames = runner.load_video_frames_for_vis(video_path)
+    print(f"[DEBUG video] path={video_path}")
+    print(f"[DEBUG video] loaded_frames={len(video_frames)}")
     video_frames_pil = [Image.fromarray(frame) for frame in video_frames]
     outputs_merged = runner.run_in_chunks_and_merge(
         video_frames_for_vis=video_frames_pil,
     )
+    print(f"[DEBUG main] outputs_merged_frames={len(outputs_merged)}")
     
     save_outputs_merged_to_coco_json(
         outputs_merged,

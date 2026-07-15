@@ -5,7 +5,7 @@ shopt -s nullglob
 ANNOTATE_MODULE="annotate.video_annotate"
 RENDER_MODULE="annotate.video_render"
 
-PROFILE="s3c3"
+PROFILE="s8c2"
 OUT_SUBDIR_BY_DATE=true       # true: 输出按日期分子目录；false: 全部写到同一个 out_dir
 IS_RESUME=false
 ############# START resume control
@@ -25,7 +25,7 @@ echo "[INFO] OUT_PREFIX= $OUT_PREFIX"
 
 
 # 2) 自动扫描日期目录（例如 2025.12.11）
-date_dirs=( "$BASE"/2025.* "$BASE"/2026.* )
+date_dirs=( "$BASE"/2025.* "$BASE"/2026.* "$BASE"/scenario_* )
 if (( ${#date_dirs[@]} == 0 )); then
   echo "[ERROR] No date dirs found under: $BASE (patterns: 2025.* 2026.*)"
   exit 1
