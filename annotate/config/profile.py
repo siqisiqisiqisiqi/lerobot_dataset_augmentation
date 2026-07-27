@@ -53,7 +53,7 @@ OBJ = {
     },
     8: {
         "name": "cup holder",
-        "prompt": "black and red holder",
+        "prompt": "black holder with red and blue twigs",
         "color_bgr": (255, 255, 0),
     },
 
@@ -65,16 +65,14 @@ SCENARIO_OBJECTS = {
     2: ("hand", "bottle", "box"),
     3: ("hand", "tissue", "box"),
     4: ("cup","glass bottle"),
-    6: ("bottle", "box"),
     7: ("bottle", "pad", "box"),
     8: ("bottle", "pad", "box"),
     9: ("bottle", "pad"),
     10: ("bottle", "box"),
-    12: ("bottle",),
-    13: ("bottle", "pad"),
-    14: ("bottle", "box"),
     20: ("blue cup", "cup holder"),
     21: ("red cup", "cup holder"),
+    22: ("blue cup", "red cup", "cup holder"),
+    23: ("blue cup", "red cup", "cup holder"),
 }
 
 VIDEO_CHUNK_SIZE = 1000
@@ -156,12 +154,6 @@ PROFILES: Dict[str, ProfileSpec] = {
         episode=20,
         date_dir="2026.01.30",
     ),
-    "s6c2": ProfileSpec(
-        scenario=6,
-        cam=2,
-        episode=12,
-        date_dir="2026.02.07",
-    ),
     "s7c2": ProfileSpec(
         scenario=7,
         cam=2,
@@ -186,34 +178,28 @@ PROFILES: Dict[str, ProfileSpec] = {
         episode=12,
         date_dir="2026.07.09",
     ),
-    "s12c2": ProfileSpec(
-        scenario=12,
-        cam=2,
-        episode=7,
-        date_dir="2026.02.02",
-    ),
-    "s13c2": ProfileSpec(
-        scenario=13,
-        cam=2,
-        episode=7,
-        date_dir="2026.06.23",
-    ),
-    "s14c2": ProfileSpec(
-        scenario=14,
-        cam=2,
-        episode=7,
-        date_dir="2026.06.23",
-    ),
     "s20c2": ProfileSpec(
         scenario=20,
         cam=2,
         episode=19,
-        date_dir="2026.06.26",
+        date_dir="2026.07.17",
     ),
     "s21c2": ProfileSpec(
         scenario=21,
         cam=2,
         episode=19,
-        date_dir="2026.06.26",
+        date_dir="2026.07.17",
+    ),
+    "s22c2": ProfileSpec(
+        scenario=22,
+        cam=2,
+        episode=25,
+        date_dir="2026.07.16",
+    ),
+    "s23c2": ProfileSpec(
+        scenario=23,
+        cam=2,
+        episode=25,
+        date_dir="2026.07.16",
     ),
 }

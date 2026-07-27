@@ -6,7 +6,7 @@ PYTHON_BIN="${PYTHON_BIN:-python3}"
 ROOT="/home/grail/training_data/real_data/stage2_augment"
 
 # Edit these two values for the usual dataset run.
-SCENARIO="scenario_20"
+SCENARIO="scenario_23"
 ANNOTATE_CAMS=("cam_2")
 
 usage() {

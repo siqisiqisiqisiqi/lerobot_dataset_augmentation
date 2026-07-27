@@ -5,7 +5,7 @@ shopt -s nullglob
 ANNOTATE_MODULE="annotate.video_annotate"
 RENDER_MODULE="annotate.video_render"
 
-PROFILE="s8c2"
+PROFILE="s23c2"
 OUT_SUBDIR_BY_DATE=true       # true: 输出按日期分子目录；false: 全部写到同一个 out_dir
 IS_RESUME=false
 ############# START resume control
