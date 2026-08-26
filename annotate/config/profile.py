@@ -23,12 +23,16 @@ OBJ = {
     },
     2: {
         "name": "pad",
-        "prompt": "blue or grey circle",
+        "prompt": "small blue circular coaster on the table",
         "color_bgr": (0, 0, 255),
     },
     3: {
         "name": "box",
-        "prompt": "grey rectangular tray",
+        "prompt": "grey object on the table",
+        "prompt_by_cam": {
+            2: "grey rectangular tray",
+            3: "light gray basket on the table",
+        },
         "color_bgr": (255, 255, 0),
     },
     4: {
@@ -158,7 +162,13 @@ PROFILES: Dict[str, ProfileSpec] = {
         scenario=7,
         cam=2,
         episode=12,
-        date_dir="scenario_1",
+        date_dir="2026.07.07",
+    ),
+    "s7c3": ProfileSpec(
+        scenario=7,
+        cam=3,
+        episode=12,
+        date_dir="2026.07.07",
     ),
     "s8c2": ProfileSpec(
         scenario=8,
@@ -166,15 +176,33 @@ PROFILES: Dict[str, ProfileSpec] = {
         episode=12,
         date_dir="2026.07.08",
     ),
+    "s8c3": ProfileSpec(
+        scenario=8,
+        cam=3,
+        episode=12,
+        date_dir="2026.07.08",
+    ),
     "s9c2": ProfileSpec(
         scenario=9,
         cam=2,
         episode=12,
-        date_dir="2026.06.08",
+        date_dir="2026.07.07",
+    ),
+    "s9c3": ProfileSpec(
+        scenario=9,
+        cam=3,
+        episode=12,
+        date_dir="2026.07.07",
     ),
     "s10c2": ProfileSpec(
         scenario=10,
         cam=2,
+        episode=12,
+        date_dir="2026.07.09",
+    ),
+    "s10c3": ProfileSpec(
+        scenario=10,
+        cam=3,
         episode=12,
         date_dir="2026.07.09",
     ),
